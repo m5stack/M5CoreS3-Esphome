@@ -270,7 +270,7 @@ microphone:
     m5cores3_audio_id: m5cores3_audio_1
     id: m5cores3_mic
     adc_type: external
-    i2s_din_pin: 6
+    i2s_din_pin: 14
     pdm: false
 
 speaker:
@@ -278,7 +278,7 @@ speaker:
     m5cores3_audio_id: m5cores3_audio_1
     id: m5cores3_spk
     dac_type: external
-    i2s_dout_pin: 7
+    i2s_dout_pin: 13
     mode: mono
     
 

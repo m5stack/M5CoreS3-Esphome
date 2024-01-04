@@ -184,7 +184,7 @@ size_t I2SAudioMicrophone::read(int16_t *buf, size_t len) {
   // ESP_LOGI(TAG, "rec %d", BUFFER_SIZE);
 
 
-  // M5.Mic.record(buf, len, 16000);
+  // M5.Mic.record(buf, len >> 1, 16000);
   M5.Mic.record(buf, 256, 16000);
   // M5.Mic.record(buf, 512, 16000);
   while (M5.Mic.isRecording());
