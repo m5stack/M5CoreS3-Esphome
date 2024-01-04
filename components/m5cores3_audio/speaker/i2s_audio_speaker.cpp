@@ -19,6 +19,9 @@ static const char *const TAG = "m5cores3.speaker";
 void I2SAudioSpeaker::setup() {
   // ESP_LOGCONFIG(TAG, "Setting up I2S Audio Speaker...");
   ESP_LOGI(TAG, "setup");
+  auto cfg = M5.Speaker.config();
+  cfg.task_priority = 15;
+  M5.Speaker.config(cfg);
   M5.Speaker.begin();
   M5.Speaker.setVolume(200);
 
@@ -28,9 +31,9 @@ void I2SAudioSpeaker::setup() {
 
 void I2SAudioSpeaker::start() { this->state_ = speaker::STATE_STARTING; }
 void I2SAudioSpeaker::start_() {
-  if (!this->parent_->try_lock()) {
-    return;  // Waiting for another i2s component to return lock
-  }
+  // if (!this->parent_->try_lock()) {
+  //   return;  // Waiting for another i2s component to return lock
+  // }
   this->state_ = speaker::STATE_RUNNING;
 
   // xTaskCreate(I2SAudioSpeaker::player_task, "speaker_task", 8192, (void *) this, 1, &this->player_task_handle_);
@@ -347,7 +350,7 @@ void I2SAudioSpeaker::watch_() {
     this->state_ = speaker::STATE_STOPPED;
     // vTaskDelete(this->player_task_handle_);
     // this->player_task_handle_ = nullptr;
-    this->parent_->unlock();
+    // this->parent_->unlock();
     // xQueueReset(this->buffer_queue_);
     // ESP_LOGD(TAG, "Stopped I2S Audio Speaker");
   }
@@ -425,8 +428,6 @@ size_t I2SAudioSpeaker::play(const uint8_t *data, size_t length) {
 
 
   M5.Speaker.playRaw((int16_t*)data, length / 2, 16000);
-
-
   return length;
 }
 
