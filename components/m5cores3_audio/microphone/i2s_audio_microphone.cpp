@@ -100,6 +100,9 @@ void I2SAudioMicrophone::start_() {
 
   M5.Speaker.end();
   M5.Mic.begin();
+  auto cfg = M5.Mic.config();
+  cfg.task_priority = 15;
+  M5.Mic.config(cfg);
   ESP_LOGI(TAG, "start mic");
 
 
