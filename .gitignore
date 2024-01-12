@@ -1,1 +1,7 @@
 **/__pycache__/
+
+# Ignore Python virtual environments
+/venv
+
+# Ignore .esphome directory in any subfolder
+**/.esphome/
