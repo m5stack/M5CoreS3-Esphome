@@ -1,0 +1,299 @@
+
+esphome:
+  name: m5cores3-with-touch-and-sound
+  friendly_name: M5CoreS3 With Touch And Sound
+  platformio_options:
+    board_build.f_cpu : 240000000L
+  libraries:
+    - m5stack/M5Unified@^0.1.12
+  includes:
+    - ../sounds/headers/click_1.h
+    - ../sounds/headers/click_2.h
+    - ../sounds/headers/click_3.h
+    - ../sounds/headers/click_4.h
+    - ../sounds/headers/click_5.h
+    - ../sounds/headers/click_6.h
+  on_boot:
+      priority: 600
+      then: 
+        - script.execute:
+            id: m5_display_set_brightness
+            value: 100
+        - script.execute: draw_display
+        - delay: 1s # needs some delay before m5 speaker is fully initiated and the volume can be set
+        - script.execute: m5_speaker_update_volume
+
+script:
+  # sound data variables like wav_click_[n]_raw are imported under esphome->includes
+  # the sound data is generated from the wav files in /sounds/wav using the /sounds/convert_all_wav_to_hex.sh script
+  - id: play_sound 
+    parameters:
+      sound_number: int
+    then:
+      - speaker.play: !lambda |-
+          std::vector<uint8_t> data;
+          switch(sound_number) {
+              case 1:
+                  data = std::vector<uint8_t>(std::begin(wav_click_1_raw), std::end(wav_click_1_raw));
+                  break;
+              case 2:
+                  data = std::vector<uint8_t>(std::begin(wav_click_2_raw), std::end(wav_click_2_raw));
+                  break;
+              case 3:
+                  data = std::vector<uint8_t>(std::begin(wav_click_3_raw), std::end(wav_click_3_raw));
+                  break;
+              case 4:
+                  data = std::vector<uint8_t>(std::begin(wav_click_4_raw), std::end(wav_click_4_raw));
+                  break;
+              case 5:
+                  data = std::vector<uint8_t>(std::begin(wav_click_5_raw), std::end(wav_click_5_raw));
+                  break;
+              case 6:
+                  data = std::vector<uint8_t>(std::begin(wav_click_6_raw), std::end(wav_click_6_raw));
+                  break;
+              default:
+                  // Handle the case where n is not valid
+                  data = std::vector<uint8_t>(); // or some default sound
+          }
+          return data;
+
+  - id: draw_display
+    then:
+      - component.update: m5cores3_lcd
+  - id: m5_display_set_brightness
+    parameters:
+      value: int
+    then:
+      - lambda: M5.Display.setBrightness(value);
+  - id: m5_speaker_update_volume
+    then:
+      - lambda: M5.Speaker.setVolume(id(speaker_volume)  * 12);
+
+
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 16MB
+  framework:
+    type: arduino
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+wifi:
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+
+captive_portal:
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/m5stack/M5CoreS3-Esphome
+    refresh: 0s
+
+globals:
+  - id: speaker_volume
+    type: int
+    restore_value: no
+    initial_value: '5'
+
+binary_sensor:
+  # Button 1
+  - platform: touchscreen
+    name: Button 1
+    x_min: 0
+    x_max: 106
+    y_min: 0
+    y_max: 80
+    on_press:
+      then:
+        - logger.log: "Clicked on Button 1"
+        - script.execute:
+            id: play_sound
+            sound_number: 1
+
+  # Button 2
+  - platform: touchscreen
+    name: Button 2
+    x_min: 107
+    x_max: 213
+    y_min: 0
+    y_max: 80
+    on_press:
+      then:
+        - logger.log: "Clicked on Button 2"
+        - script.execute:
+            id: play_sound
+            sound_number: 2
+
+  # Button 3
+  - platform: touchscreen
+    name: Button 3
+    x_min: 214
+    x_max: 320
+    y_min: 0
+    y_max: 80
+    on_press:
+      then:
+        - logger.log: "Clicked on Button 3"
+        - script.execute:
+            id: play_sound
+            sound_number: 3
+
+  # Button 4
+  - platform: touchscreen
+    name: Button 4
+    x_min: 0
+    x_max: 106
+    y_min: 81
+    y_max: 160
+    on_press:
+      then:
+        - logger.log: "Clicked on Button 4"
+        - script.execute:
+            id: play_sound
+            sound_number: 4
+
+  # Button 5
+  - platform: touchscreen
+    name: Button 5
+    x_min: 107
+    x_max: 213
+    y_min: 81
+    y_max: 160
+    on_press:
+      then:
+        - logger.log: "Clicked on Button 5"
+        - script.execute:
+            id: play_sound
+            sound_number: 5
+
+  # Button 6
+  - platform: touchscreen
+    name: Button 6
+    x_min: 214
+    x_max: 320
+    y_min: 81
+    y_max: 160
+    on_press:
+      then:
+        - logger.log: "Clicked on Button 6"
+        - script.execute:
+            id: play_sound
+            sound_number: 6
+
+  - platform: touchscreen
+    name: Volume Minus
+    x_min: 0
+    x_max: 80
+    y_min: 162
+    y_max: 242
+    on_press:
+      then:
+        - logger.log: "Volume Minus pressed"
+        - lambda: |-
+            if (id(speaker_volume) > 0) {
+              id(speaker_volume) -= 1;
+              M5.Speaker.setVolume(id(speaker_volume)  * 12);
+            }
+        - script.execute:
+            id: play_sound
+            sound_number: 3
+        - script.execute: draw_display
+
+  - platform: touchscreen
+    name: Volume Plus
+    x_min: 240
+    x_max: 320
+    y_min: 162
+    y_max: 242
+    on_press:
+      then:
+        - logger.log: "Volume Plus pressed"
+        - lambda: |-
+            if (id(speaker_volume) < 10) {
+              id(speaker_volume) += 1;
+              M5.Speaker.setVolume(id(speaker_volume) * 12);
+            }
+        - script.execute:
+            id: play_sound
+            sound_number: 3
+        - script.execute: draw_display
+
+
+image:
+  - file: mdi:volume-minus
+    id: volume_minus
+    resize: 80x80
+  - file: mdi:volume-plus
+    id: volume_plus
+    resize: 80x80
+
+font:
+  - file: "gfonts://Roboto"
+    id: roboto
+    size: 36
+
+display:
+  - platform: m5cores3_display
+    model: ILI9342
+    dc_pin: 35
+    update_interval: never
+    id: m5cores3_lcd
+    lambda: |-
+      // Define colors
+      auto red = Color(255, 0, 0);
+      auto green = Color(0, 255, 0);
+      auto blue = Color(0, 0, 255);
+      auto white = Color(255, 255, 255);
+
+      // Draw filled rectangles for buttons
+      it.filled_rectangle(0, 0, 106, 80, red);    // Rectangle for Button 1
+      it.filled_rectangle(107, 0, 106, 80, green);  // Rectangle for Button 2
+      it.filled_rectangle(214, 0, 106, 80, blue);  // Rectangle for Button 3
+      it.filled_rectangle(0, 81, 106, 80, white);   // Rectangle for Button 4
+      it.filled_rectangle(107, 81, 106, 80, red); // Rectangle for Button 5
+      it.filled_rectangle(214, 81, 106, 80, green); // Rectangle for Button 6
+      it.image(0, 162, id(volume_minus));
+      it.printf(150, 180, id(roboto), white, "%d", id(speaker_volume));
+      it.image(240, 162, id(volume_plus));
+
+
+touchscreen:
+  - platform: m5cores3_touchscreen
+    update_interval: 20ms
+    on_touch:
+      - logger.log:
+          format: Touch %d at (%d, %d)
+          args: [touch.id, touch.x, touch.y]
+
+# 
+# Audio
+# 
+board_m5cores3:
+m5cores3_audio:
+  id: m5cores3_audio_1
+
+microphone:
+  - platform: m5cores3_audio
+    m5cores3_audio_id: m5cores3_audio_1
+    id: m5cores3_mic
+    adc_type: external
+    i2s_din_pin: 14
+    pdm: false
+
+speaker:
+  - platform: m5cores3_audio
+    m5cores3_audio_id: m5cores3_audio_1
+    id: m5cores3_spk
+    dac_type: external
+    i2s_dout_pin: 13
+    mode: mono
