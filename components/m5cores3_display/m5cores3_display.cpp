@@ -39,8 +39,8 @@ void M5CoreS3Display::setup() {
 
 float M5CoreS3Display::get_setup_priority() const { return setup_priority::HARDWARE; }
 void M5CoreS3Display::dump_config() {}
-int M5CoreS3Display::get_width() { return M5.Display.width(); }
-int M5CoreS3Display::get_height() { return M5.Display.height(); }
+int M5CoreS3Display::get_width_internal() { return M5.Display.width(); }
+int M5CoreS3Display::get_height_internal() { return M5.Display.height(); }
 
 
 void M5CoreS3Display::draw_pixel_at(int x, int y, Color color) {
