@@ -80,7 +80,7 @@ ota:
   - platform: esphome
     # Replace the key by your OTA key
     password: "<YOUR_OTA_KEY>"
-    
+
 wifi:
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -104,7 +104,6 @@ globals:
     type: int
     restore_value: no
     initial_value: ${voice_assist_not_ready_phase_id}
-    
 
 # 
 # Display
@@ -261,7 +260,6 @@ display:
         lambda: |-
           it.fill(Color::BLACK);
 
-
 # 
 # Audio
 # 
@@ -284,7 +282,6 @@ speaker:
     dac_type: external
     i2s_dout_pin: 13
     mode: mono
-    
 
 # 
 # VA
@@ -341,7 +338,6 @@ voice_assistant:
     - lambda: id(voice_assistant_phase) = ${voice_assist_not_ready_phase_id};  
     - script.execute: draw_display
 
-
 switch:
 - platform: template
   name: "LCD Backlight"
@@ -382,4 +378,3 @@ switch:
           - lambda: id(va).set_use_wake_word(false);
           - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
           - script.execute: draw_display
-
