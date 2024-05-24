@@ -9,8 +9,8 @@ class M5CoreS3Display : public display::Display {
   void setup() override;
   float get_setup_priority() const override;
   void dump_config() override;
-  int get_width() override;
-  int get_height() override;
+  int get_width_internal() override;
+  int get_height_internal() override;
 
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_COLOR; }
   void fill(Color color) override;
