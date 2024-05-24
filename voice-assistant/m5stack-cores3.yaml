@@ -23,7 +23,6 @@ substitutions:
   voice_assist_error_phase_id: '11'  
   voice_assist_muted_phase_id: '12'
 
-
 esphome:
   name: m5cores3
   friendly_name: M5CoreS3
@@ -64,18 +63,24 @@ external_components:
     components: [ board_m5cores3, m5cores3_audio, m5cores3_display ]
     refresh: 0s
 
-
 # Enable logging
 logger:
 
 # Enable Home Assistant API
 api:
+  encryption:
+    # Replace the key by your API key
+    key: "<YOUR_API_KEY>"
   on_client_connected:
     - script.execute: draw_display
   on_client_disconnected:
     - script.execute: draw_display
 
 ota:
+  - platform: esphome
+    # Replace the key by your OTA key
+    password: "<YOUR_OTA_KEY>"
+
 wifi:
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -86,7 +91,6 @@ wifi:
     - script.execute: draw_display
 
 captive_portal:
-    
 
 # 
 # Globals
@@ -100,7 +104,6 @@ globals:
     type: int
     restore_value: no
     initial_value: ${voice_assist_not_ready_phase_id}
-    
 
 # 
 # Display
@@ -257,7 +260,6 @@ display:
         lambda: |-
           it.fill(Color::BLACK);
 
-
 # 
 # Audio
 # 
@@ -280,7 +282,6 @@ speaker:
     dac_type: external
     i2s_dout_pin: 13
     mode: mono
-    
 
 # 
 # VA
@@ -337,7 +338,6 @@ voice_assistant:
     - lambda: id(voice_assistant_phase) = ${voice_assist_not_ready_phase_id};  
     - script.execute: draw_display
 
-
 switch:
 - platform: template
   name: "LCD Backlight"
@@ -378,4 +378,3 @@ switch:
           - lambda: id(va).set_use_wake_word(false);
           - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
           - script.execute: draw_display
-
