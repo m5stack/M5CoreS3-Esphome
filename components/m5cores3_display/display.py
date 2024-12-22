@@ -111,7 +111,7 @@ def _validate(config):
 
 
 CONFIG_SCHEMA = cv.All(
-    font.validate_pillow_installed,
+    #font.validate_pillow_installed,
     display.FULL_DISPLAY_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(ILI9XXXDisplay),
