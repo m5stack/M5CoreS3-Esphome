@@ -167,44 +167,35 @@ image:
   - file: ${error_illustration_file}
     id: casita_error
     resize: 320x240
-    type: RGB24
-    use_transparency: true
+    type: RGB
   - file: ${idle_illustration_file}
     id: casita_idle
     resize: 320x240
-    type: RGB24
-    use_transparency: true
+    type: RGB
   - file: ${listening_illustration_file}
     id: casita_listening
     resize: 320x240
-    type: RGB24
-    use_transparency: true
+    type: RGB
   - file: ${thinking_illustration_file}
     id: casita_thinking
     resize: 320x240
-    type: RGB24
-    use_transparency: true
+    type: RGB
   - file: ${replying_illustration_file}
     id: casita_replying
     resize: 320x240
-    type: RGB24
-    use_transparency: true
+    type: RGB
   - file: ${loading_illustration_file}
     id: casita_initializing
     resize: 320x240
-    type: RGB24
-    use_transparency: true
+    type: RGB
   - file: https://github.com/esphome/firmware/raw/main/voice-assistant/error_box_illustrations/error-no-wifi.png
     id: error_no_wifi
     resize: 320x240
-    type: RGB24
-    use_transparency: true
+    type: RGB
   - file: https://github.com/esphome/firmware/raw/main/voice-assistant/error_box_illustrations/error-no-ha.png
     id: error_no_ha
     resize: 320x240
-    type: RGB24
-    use_transparency: true
-
+    type: RGB
 color:
   - id: idle_color
     hex: ${idle_illustration_background_color}
