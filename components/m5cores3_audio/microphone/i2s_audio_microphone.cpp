@@ -136,7 +136,7 @@ void I2SAudioMicrophone::stop_() {
   this->high_freq_.stop();
 }
 
-size_t I2SAudioMicrophone::read(int16_t *buf, size_t len) {
+size_t I2SAudioMicrophone::read_(uint8_t *buf, size_t len, TickType_t ticks_to_wait) {
   // size_t bytes_read = 0;
   // esp_err_t err = i2s_read(this->parent_->get_port(), buf, len, &bytes_read, (100 / portTICK_PERIOD_MS));
   // if (err != ESP_OK) {
@@ -187,18 +187,19 @@ size_t I2SAudioMicrophone::read(int16_t *buf, size_t len) {
   // ESP_LOGI(TAG, "rec %d", BUFFER_SIZE);
 
 
-  // M5.Mic.record(buf, len >> 1, 16000);
-  M5.Mic.record(buf, 256, 16000);
-  // M5.Mic.record(buf, 512, 16000);
+  // Create a temporary buffer for 16-bit samples
+  size_t samples_to_read = len / sizeof(int16_t);
+  std::vector<int16_t> temp_buf(samples_to_read);
+  
+  // Record into temporary buffer
+  M5.Mic.record(temp_buf.data(), samples_to_read, 16000);
   while (M5.Mic.isRecording());
-  // delay(500);
-  // ESP_LOGI(TAG, "done");
-
+  
+  // Convert 16-bit samples to bytes
+  memcpy(buf, temp_buf.data(), len);
+  
   this->status_clear_warning();
-
-  // return len;
-  // return 256;
-  return 512;
+  return len;
 
 
   // this->status_set_warning();
@@ -227,24 +228,6 @@ size_t I2SAudioMicrophone::read(int16_t *buf, size_t len) {
   // }
 }
 
-void I2SAudioMicrophone::read_() {
-  std::vector<int16_t> samples;
-  samples.resize(BUFFER_SIZE);
-  size_t bytes_read = this->read(samples.data(), BUFFER_SIZE / sizeof(int16_t));
-  samples.resize(bytes_read / sizeof(int16_t));
-  this->data_callbacks_.call(samples);
-
-
-  // std::vector<int16_t> samples;
-  // samples.resize(BUFFER_SIZE);
-
-  // ESP_LOGI(TAG, "start record %d", BUFFER_SIZE);
-  // M5.Mic.record(samples.data(), BUFFER_SIZE, 16000);
-  // while (M5.Mic.isRecording());
-  // ESP_LOGI(TAG, "done");
-
-  // this->data_callbacks_.call(samples);
-}
 
 void I2SAudioMicrophone::loop() {
   switch (this->state_) {
@@ -255,7 +238,11 @@ void I2SAudioMicrophone::loop() {
       break;
     case microphone::STATE_RUNNING:
       if (this->data_callbacks_.size() > 0) {
-        this->read_();
+        std::vector<uint8_t> samples;
+        samples.resize(BUFFER_SIZE);
+        size_t bytes_read = this->read_(samples.data(), BUFFER_SIZE, pdMS_TO_TICKS(16));
+        samples.resize(bytes_read);
+        this->data_callbacks_.call(samples);
       }
       break;
     case microphone::STATE_STOPPING:

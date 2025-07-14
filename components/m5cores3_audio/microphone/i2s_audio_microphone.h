@@ -22,7 +22,6 @@ class I2SAudioMicrophone : public I2SAudioIn, public microphone::Microphone, pub
   void set_din_pin(int8_t pin) { this->din_pin_ = pin; }
   void set_pdm(bool pdm) { this->pdm_ = pdm; }
 
-  size_t read(int16_t *buf, size_t len) override;
 
 #if SOC_I2S_SUPPORTS_ADC
   void set_adc_channel(adc1_channel_t channel) {
@@ -37,7 +36,7 @@ class I2SAudioMicrophone : public I2SAudioIn, public microphone::Microphone, pub
  protected:
   void start_();
   void stop_();
-  void read_();
+  size_t read_(uint8_t *buf, size_t len, TickType_t ticks_to_wait);
 
   int8_t din_pin_{I2S_PIN_NO_CHANGE};
 #if SOC_I2S_SUPPORTS_ADC
