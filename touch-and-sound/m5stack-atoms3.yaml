@@ -1,0 +1,140 @@
+
+esphome:
+  name: m5atoms3-with-touch-and-sound
+  friendly_name: M5AtomS3 With Touch And Sound
+  platformio_options:
+    board_build.f_cpu : 240000000L
+  libraries:
+    - m5stack/M5Unified@^0.1.12
+  includes:
+    - ../sounds/headers/click_1.h
+    - ../sounds/headers/click_2.h
+    - ../sounds/headers/click_3.h
+    - ../sounds/headers/click_4.h
+    - ../sounds/headers/click_5.h
+    - ../sounds/headers/click_6.h
+  on_boot:
+      priority: 600
+      then: 
+        - script.execute:
+            id: m5_display_set_brightness
+            value: 100
+        - script.execute: draw_display
+        - delay: 1s # needs some delay before m5 speaker is fully initiated and the volume can be set
+        - script.execute: m5_speaker_update_volume
+
+script:
+  # sound data variables like wav_click_[n]_raw are imported under esphome->includes
+  # the sound data is generated from the wav files in /sounds/wav using the /sounds/convert_all_wav_to_hex.sh script
+  - id: play_sound 
+    parameters:
+      sound_number: int
+    then:
+      - speaker.play: !lambda |-
+          std::vector<uint8_t> data;
+          switch(sound_number) {
+              case 1:
+                  data = std::vector<uint8_t>(std::begin(wav_click_1_raw), std::end(wav_click_1_raw));
+                  break;
+              case 2:
+                  data = std::vector<uint8_t>(std::begin(wav_click_2_raw), std::end(wav_click_2_raw));
+                  break;
+              case 3:
+                  data = std::vector<uint8_t>(std::begin(wav_click_3_raw), std::end(wav_click_3_raw));
+                  break;
+              case 4:
+                  data = std::vector<uint8_t>(std::begin(wav_click_4_raw), std::end(wav_click_4_raw));
+                  break;
+              case 5:
+                  data = std::vector<uint8_t>(std::begin(wav_click_5_raw), std::end(wav_click_5_raw));
+                  break;
+              case 6:
+                  data = std::vector<uint8_t>(std::begin(wav_click_6_raw), std::end(wav_click_6_raw));
+                  break;
+              default:
+                  // Handle the case where n is not valid
+                  data = std::vector<uint8_t>(); // or some default sound
+          }
+          return data;
+
+  - id: draw_display
+    then:
+      - component.update: m5atoms3_lcd
+  - id: m5_display_set_brightness
+    parameters:
+      value: int
+    then:
+      - lambda: M5.Display.setBrightness(value);
+  - id: m5_speaker_update_volume
+    then:
+      - lambda: M5.Speaker.setVolume(id(speaker_volume)  * 12);
+
+
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 8MB
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+wifi:
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+
+captive_portal:
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/mrpullen/M5AtomS3-EchoBase-Esphome
+    refresh: 0s
+
+globals:
+  - id: speaker_volume
+    type: int
+    restore_value: no
+    initial_value: '5'
+
+
+# 
+# Audio
+# 
+## 
+CONF_I2S_DOUT_PIN = "i2s_dout_pin"
+CONF_I2S_DIN_PIN = "i2s_din_pin"
+CONF_I2S_MCLK_PIN = "i2s_mclk_pin"
+CONF_I2S_BCLK_PIN = "i2s_bclk_pin"
+CONF_I2S_LRCLK_PIN = "i2s_lrclk_pin"
+##
+
+board_m5atoms3:
+
+m5atoms3_audio:
+  id: m5atoms3_audio_1
+  i2s_bclk_pin: 6
+  i2s_lrc_pin: 8
+  i2s_mclk_pin: 0
+  # i2s_din_pin: 7  # only needed if using the microphone
+  # i2s_dout_pin: 5 # only needed if using the speaker
+
+microphone:
+  - platform: m5atoms3_audio
+    m5atoms3_audio_id: m5atoms3_audio_1
+    id: m5atoms3_mic
+    adc_type: external
+    i2s_din_pin: 7
+    pdm: false
+
+speaker:
+  - platform: m5atoms3_audio
+    m5atoms3_audio_id: m5atoms3_audio_1
+    id: m5atoms3_spk
+    dac_type: external
+    i2s_dout_pin: 5
+    mode: mono

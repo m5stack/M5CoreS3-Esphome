@@ -7,21 +7,21 @@
 #include <M5Unified.h>
 
 namespace esphome {
-namespace m5cores3 {
+namespace m5atoms3 {
 
-static const char *const TAG = "m5cores3.touchscreen";
+static const char *const TAG = "m5atoms3.touchscreen";
 
 enum VendorId {
   ID_UNKNOWN = 0,
 };
 
-class M5CoreS3Touchscreen : public touchscreen::Touchscreen {
+class M5AtomS3Touchscreen : public touchscreen::Touchscreen {
  public:
   void setup() override {
-    esph_log_config(TAG, "Setting up M5CoreS3 Touchscreen...");
+    esph_log_config(TAG, "Setting up M5AtomS3 Touchscreen...");
     this->x_raw_max_ = M5.Display.width();
     this->y_raw_max_ = M5.Display.height();
-    esph_log_config(TAG, "M5CoreS3 Touchscreen setup complete");
+    esph_log_config(TAG, "M5AtomS3 Touchscreen setup complete");
   }
 
   void update_touches() override {
@@ -36,12 +36,12 @@ class M5CoreS3Touchscreen : public touchscreen::Touchscreen {
   }
 
   void dump_config() override {
-    esph_log_config(TAG, "M5CoreS3 Touchscreen:");
+    esph_log_config(TAG, "M5AtomS3 Touchscreen:");
   }
 
  protected:
   VendorId vendor_id_{ID_UNKNOWN};
 };
 
-}  // namespace m5cores3
+}  // namespace m5atoms3
 }  // namespace esphome

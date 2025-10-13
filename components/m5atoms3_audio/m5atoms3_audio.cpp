@@ -1,16 +1,16 @@
 // #include "i2s_audio.h"
-#include "m5cores3_audio.h"
+#include "m5atoms3_audio.h"
 
 // #ifdef USE_ESP32
 
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace m5cores3_audio {
+namespace m5atoms3_audio {
 
-static const char *const TAG = "m5cores3.audio";
+static const char *const TAG = "m5atoms3.audio";
 
-void M5CoreS3AudioComponent::setup() {
+void M5AtomS3AudioComponent::setup() {
   // static i2s_port_t next_port_num = I2S_NUM_0;
 
   // if (next_port_num >= I2S_NUM_MAX) {

@@ -7,9 +7,9 @@
 
 
 namespace esphome {
-namespace board_m5cores3 {
+namespace board_m5atoms3 {
 
-class BoardM5CoreS3 : public Component {
+class BoardM5AtomS3 : public Component {
  public:
   void setup() override;
   void loop() override;

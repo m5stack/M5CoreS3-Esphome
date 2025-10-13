@@ -9,11 +9,11 @@
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace m5cores3_audio {
+namespace m5atoms3_audio {
 
 static const size_t BUFFER_SIZE = 512;
 
-static const char *const TAG = "m5cores3.microphone";
+static const char *const TAG = "m5atoms3.microphone";
 
 void I2SAudioMicrophone::setup() {
 //   ESP_LOGCONFIG(TAG, "Setting up I2S Audio Microphone...");

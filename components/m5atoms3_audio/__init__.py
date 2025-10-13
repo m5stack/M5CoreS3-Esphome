@@ -22,11 +22,11 @@ CONF_I2S_MCLK_PIN = "i2s_mclk_pin"
 CONF_I2S_BCLK_PIN = "i2s_bclk_pin"
 CONF_I2S_LRCLK_PIN = "i2s_lrclk_pin"
 
-CONF_I2S_AUDIO = "m5cores3_audio"
-CONF_I2S_AUDIO_ID = "m5cores3_audio_id"
+CONF_I2S_AUDIO = "m5atoms3_audio"
+CONF_I2S_AUDIO_ID = "m5atoms3_audio_id"
 
-i2s_audio_ns = cg.esphome_ns.namespace("m5cores3_audio")
-I2SAudioComponent = i2s_audio_ns.class_("M5CoreS3AudioComponent", cg.Component)
+i2s_audio_ns = cg.esphome_ns.namespace("m5atoms3_audio")
+I2SAudioComponent = i2s_audio_ns.class_("M5AtomS3AudioComponent", cg.Component)
 I2SAudioIn = i2s_audio_ns.class_("I2SAudioIn", cg.Parented.template(I2SAudioComponent))
 I2SAudioOut = i2s_audio_ns.class_(
     "I2SAudioOut", cg.Parented.template(I2SAudioComponent)

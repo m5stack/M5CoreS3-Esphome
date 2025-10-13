@@ -3,7 +3,7 @@
 // #ifdef USE_ESP32
 
 // #include "../i2s_audio.h"
-#include "../m5cores3_audio.h"
+#include "../m5atoms3_audio.h"
 
 #include <driver/i2s.h>
 #include <freertos/FreeRTOS.h>
@@ -15,7 +15,7 @@
 #include "esphome/core/helpers.h"
 
 namespace esphome {
-namespace m5cores3_audio {
+namespace m5atoms3_audio {
 
 static const size_t BUFFER_SIZE = 1024;
 

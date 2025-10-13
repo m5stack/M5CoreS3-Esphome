@@ -3,13 +3,13 @@
 // #ifdef USE_ESP32
 
 // #include "../i2s_audio.h"
-#include "../m5cores3_audio.h"
+#include "../m5atoms3_audio.h"
 
 #include "esphome/components/microphone/microphone.h"
 #include "esphome/core/component.h"
 
 namespace esphome {
-namespace m5cores3_audio {
+namespace m5atoms3_audio {
 
 class I2SAudioMicrophone : public I2SAudioIn, public microphone::Microphone, public Component {
  public:

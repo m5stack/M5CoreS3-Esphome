@@ -7,15 +7,15 @@
 #include "esphome/core/helpers.h"
 
 namespace esphome {
-namespace m5cores3_audio {
+namespace m5atoms3_audio {
 
-class M5CoreS3AudioComponent;
+class M5AtomS3AudioComponent;
 
-class I2SAudioIn : public Parented<M5CoreS3AudioComponent> {};
+class I2SAudioIn : public Parented<M5AtomS3AudioComponent> {};
 
-class I2SAudioOut : public Parented<M5CoreS3AudioComponent> {};
+class I2SAudioOut : public Parented<M5AtomS3AudioComponent> {};
 
-class M5CoreS3AudioComponent : public Component {
+class M5AtomS3AudioComponent : public Component {
  public:
   void setup() override;
 

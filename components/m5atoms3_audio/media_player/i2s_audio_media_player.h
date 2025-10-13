@@ -3,7 +3,7 @@
 // #ifdef USE_ESP32_FRAMEWORK_ARDUINO
 
 // #include "../i2s_audio.h"
-#include "../m5cores3_audio.h"
+#include "../m5atoms3_audio.h"
 
 #include <driver/i2s.h>
 
@@ -15,7 +15,7 @@
 #include <Audio.h>
 
 namespace esphome {
-namespace m5cores3_audio {
+namespace m5atoms3_audio {
 
 enum I2SState : uint8_t {
   I2S_STATE_STOPPED = 0,

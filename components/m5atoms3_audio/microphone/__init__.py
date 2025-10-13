@@ -16,7 +16,7 @@ from .. import (
 
 CODEOWNERS = ["@jesserockz"]
 # DEPENDENCIES = ["i2s_audio"]
-DEPENDENCIES = ["m5cores3_audio"]
+DEPENDENCIES = ["m5atoms3_audio"]
 
 CONF_ADC_PIN = "adc_pin"
 CONF_ADC_TYPE = "adc_type"

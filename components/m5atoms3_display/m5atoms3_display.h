@@ -2,9 +2,9 @@
 #include "esphome/components/display/display_buffer.h"
 
 namespace esphome {
-namespace m5cores3_display {
+namespace m5atoms3_display {
 
-class M5CoreS3Display : public display::Display {
+class M5AtomS3Display : public display::Display {
  public:
   void setup() override;
   float get_setup_priority() const override;
@@ -18,5 +18,5 @@ class M5CoreS3Display : public display::Display {
   void update() override;
 };
 
-}  // namespace m5cores3_display
+}  // namespace m5atoms3_display
 }  // namespace esphome

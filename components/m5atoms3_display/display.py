@@ -31,10 +31,10 @@ def AUTO_LOAD():
 CODEOWNERS = ["@nielsnl68", "@clydebarrow"]
 
 # ili9xxx_ns = cg.esphome_ns.namespace("ili9xxx")
-ili9xxx_ns = cg.esphome_ns.namespace("m5cores3_display")
+ili9xxx_ns = cg.esphome_ns.namespace("m5atoms3_display")
 
 ILI9XXXDisplay = ili9xxx_ns.class_(
-    "M5CoreS3Display",
+    "M5AtomS3Display",
     cg.PollingComponent,
     # spi.SPIDevice,
     display.Display,

@@ -5,7 +5,7 @@
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace m5cores3_audio {
+namespace m5atoms3_audio {
 
 static const char *const TAG = "audio";
 
