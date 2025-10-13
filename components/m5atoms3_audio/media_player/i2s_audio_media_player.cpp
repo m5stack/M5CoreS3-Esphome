@@ -11,12 +11,15 @@ static const char *const TAG = "audio";
 
 void I2SAudioMediaPlayer::control(const media_player::MediaPlayerCall &call) {
   if (call.get_media_url().has_value()) {
+     ESP_LOGCONFIG(TAG, " CurrentUrl:", call.get_media_url());
+    ESP_LOGCONFIG(TAG, "  Current Url:", this->external_dac_channels_);
     this->current_url_ = call.get_media_url();
 
     if (this->state == media_player::MEDIA_PLAYER_STATE_PLAYING && this->audio_ != nullptr) {
       if (this->audio_->isRunning()) {
         this->audio_->stopSong();
       }
+
       this->audio_->connecttohost(this->current_url_.value().c_str());
     } else {
       this->start();
@@ -162,6 +165,7 @@ void I2SAudioMediaPlayer::start_() {
   this->high_freq_.start();
   this->audio_->setVolume(remap<uint8_t, float>(this->volume, 0.0f, 1.0f, 0, 21));
   if (this->current_url_.has_value()) {
+     ESP_LOGCONFIG(TAG, "  CurrentUrl:" this->current_url_ );
     this->audio_->connecttohost(this->current_url_.value().c_str());
     this->state = media_player::MEDIA_PLAYER_STATE_PLAYING;
     this->publish_state();

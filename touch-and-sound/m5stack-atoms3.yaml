@@ -122,3 +122,17 @@ speaker:
     dac_type: external
     i2s_dout_pin: 5
     mode: mono
+
+media_player:
+  - platform: speaker
+    id: speaker
+    speaker_id: m5atoms3_spk
+    on_playback_started:
+      then:
+        - logger.log: "Playback started"
+    on_playback_ended:
+      then:
+        - logger.log: "Playback ended"
+    on_error:
+      then:
+        - logger.log: "Playback error"
