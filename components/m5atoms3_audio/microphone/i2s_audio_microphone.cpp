@@ -117,7 +117,8 @@ void I2SAudioMicrophone::stop_() {
   this->high_freq_.stop();
 }
 
-size_t I2SAudioMicrophone::read(uint16_t *buf, size_t len) {
+
+size_t I2SAudioMicrophone::read(int16_t *buf, size_t len) {
   
   M5.Mic.record(buf, 256, 16000);
   // M5.Mic.record(buf, 512, 16000);
