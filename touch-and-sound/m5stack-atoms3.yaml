@@ -5,14 +5,7 @@ esphome:
   platformio_options:
     board_build.f_cpu : 240000000L
   libraries:
-    - m5stack/M5Unified@^0.1.12
-  includes:
-    - ../sounds/headers/click_1.h
-    - ../sounds/headers/click_2.h
-    - ../sounds/headers/click_3.h
-    - ../sounds/headers/click_4.h
-    - ../sounds/headers/click_5.h
-    - ../sounds/headers/click_6.h
+    - m5stack/M5Unified@^0.2.3
   on_boot:
       priority: 600
       then: 
@@ -105,23 +98,14 @@ globals:
 # 
 # Audio
 # 
-## 
-CONF_I2S_DOUT_PIN = "i2s_dout_pin"
-CONF_I2S_DIN_PIN = "i2s_din_pin"
-CONF_I2S_MCLK_PIN = "i2s_mclk_pin"
-CONF_I2S_BCLK_PIN = "i2s_bclk_pin"
-CONF_I2S_LRCLK_PIN = "i2s_lrclk_pin"
-##
 
 board_m5atoms3:
 
-m5atoms3_audio:
+mm5atoms3_audio:
   id: m5atoms3_audio_1
   i2s_bclk_pin: 6
-  i2s_lrc_pin: 8
-  i2s_mclk_pin: 0
-  # i2s_din_pin: 7  # only needed if using the microphone
-  # i2s_dout_pin: 5 # only needed if using the speaker
+  i2s_lrclk_pin: 8
+ 
 
 microphone:
   - platform: m5atoms3_audio
