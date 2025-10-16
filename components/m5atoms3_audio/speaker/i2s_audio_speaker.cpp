@@ -47,8 +47,8 @@ void I2SAudioSpeaker::player_task(void *params) {
   xQueueSend(this_speaker->event_queue_, &event, portMAX_DELAY);
 
   auto cfg = M5.Speaker.config();
-  cfg.dma_buf_count = this->dma_buf_count_;
-  cfg.dma_buf_len = this->buffer_size_ / 2;
+  cfg.dma_buf_count = params.dma_buf_count_;
+  cfg.dma_buf_len = params.buffer_size_ / 2;
   cfg.task_priority = 15;
   M5.Speaker.config(cfg);
   M5.Mic.end();
@@ -56,12 +56,12 @@ void I2SAudioSpeaker::player_task(void *params) {
   ESP_LOGI(TAG, "spk start play");
 
   DataEvent data_event;
-  data_event.data.resize(this->buffer_size_ / 2);
+  data_event.data.resize(params.buffer_size_ / 2);
 
   event.type = TaskEventType::STARTED;
   xQueueSend(this_speaker->event_queue_, &event, portMAX_DELAY);
 
-  int16_t buffer[this->buffer_size / 2];
+  int16_t buffer[params.buffer_size_ / 2];
 
   while (true) {
     if (xQueueReceive(this_speaker->buffer_queue_, &data_event, 100 / portTICK_PERIOD_MS) != pdTRUE) {
@@ -76,7 +76,7 @@ void I2SAudioSpeaker::player_task(void *params) {
     // clear the vector for reuse
     data_event.data.clear();
     // Play the buffer directly
-    M5.Speaker.playRaw(buffer, data_event.len / sizeof(int16_t), this->sample_rate_);
+    M5.Speaker.playRaw(buffer, data_event.len / sizeof(int16_t), params.sample_rate_);
 
     event.type = TaskEventType::PLAYING;
     xQueueSend(this_speaker->event_queue_, &event, portMAX_DELAY);
@@ -144,7 +144,7 @@ size_t I2SAudioSpeaker::play(const uint8_t *data, size_t length) {
 
   }
 
-  M5.Speaker.playRaw((int16_t*)data, length, this->sample_rate_);
+  M5.Speaker.playRaw((int16_t*)data, length / 2, this->sample_rate_);
   return length;
 }
 

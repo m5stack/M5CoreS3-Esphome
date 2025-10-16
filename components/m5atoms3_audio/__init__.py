@@ -16,12 +16,6 @@ CODEOWNERS = ["@jesserockz"]
 DEPENDENCIES = ["esp32"]
 MULTI_CONF = True
 
-CONF_I2S_DOUT_PIN = "i2s_dout_pin"
-CONF_I2S_DIN_PIN = "i2s_din_pin"
-CONF_I2S_MCLK_PIN = "i2s_mclk_pin"
-CONF_I2S_BCLK_PIN = "i2s_bclk_pin"
-CONF_I2S_LRCLK_PIN = "i2s_lrclk_pin"
-
 CONF_I2S_AUDIO = "m5atoms3_audio"
 CONF_I2S_AUDIO_ID = "m5atoms3_audio_id"
 
@@ -43,9 +37,6 @@ I2S_PORTS = {
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(I2SAudioComponent),
-        cv.Optional(CONF_I2S_LRCLK_PIN): pins.internal_gpio_output_pin_number,
-        cv.Optional(CONF_I2S_BCLK_PIN): pins.internal_gpio_output_pin_number,
-        cv.Optional(CONF_I2S_MCLK_PIN): pins.internal_gpio_output_pin_number,
     }
 )
 
@@ -69,9 +60,3 @@ async def to_code(config):
     await cg.register_component(var, config)
 
     # cg.add(var.set_lrclk_pin(config[CONF_I2S_LRCLK_PIN]))
-    if CONF_I2S_LRCLK_PIN in config:
-        cg.add(var.set_bclk_pin(config[CONF_I2S_LRCLK_PIN]))
-    if CONF_I2S_BCLK_PIN in config:
-        cg.add(var.set_bclk_pin(config[CONF_I2S_BCLK_PIN]))
-    if CONF_I2S_MCLK_PIN in config:
-        cg.add(var.set_mclk_pin(config[CONF_I2S_MCLK_PIN]))
