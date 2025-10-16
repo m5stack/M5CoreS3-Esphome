@@ -113,13 +113,13 @@ void I2SAudioMicrophone::stop_() {
 
   this->parent_->unlock();
   this->state_ = microphone::STATE_STOPPED;
-  this->high_freq_.stop();
+
 }
 
 
 size_t I2SAudioMicrophone::read(int16_t *buf, size_t len) {
   
-  M5.Mic.record(buf, 256, 16000);
+  M5.Mic.record(buf, 256, this->parent -> get_sample_rate());
   // M5.Mic.record(buf, 512, 16000);
   while (M5.Mic.isRecording());
   // delay(500);
