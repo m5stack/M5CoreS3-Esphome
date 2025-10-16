@@ -5,7 +5,8 @@
 // #include "../i2s_audio.h"
 #include "../m5atoms3_audio.h"
 
-#include <driver/i2s.h>
+
+#include <driver/i2s_std.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 

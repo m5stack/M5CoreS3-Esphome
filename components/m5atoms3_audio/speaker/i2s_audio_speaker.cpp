@@ -2,7 +2,7 @@
 
 // #ifdef USE_ESP32
 
-// #include <driver/i2s.h>
+#include <driver/i2s_std.h>
 #include <M5Unified.h>
 
 #include "esphome/core/application.h"

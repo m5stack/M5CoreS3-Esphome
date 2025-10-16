@@ -5,7 +5,7 @@
 // #include "../i2s_audio.h"
 #include "../m5atoms3_audio.h"
 
-//#include <driver/i2s.h>
+#include <driver/i2s_std.h>
 
 #include "esphome/components/media_player/media_player.h"
 #include "esphome/core/component.h"

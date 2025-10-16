@@ -273,6 +273,7 @@ speaker:
     i2s_dout_pin: 7
     mode: mono
 
+
 # 
 # VA
 # 
