@@ -6,6 +6,7 @@ from esphome.components import esp32, speaker
 
 from .. import (
     CONF_I2S_AUDIO_ID,
+    I2SAudioComponent,
     I2SAudioOut,
     i2s_audio_ns,
 )
@@ -21,15 +22,13 @@ I2SAudioSpeaker = i2s_audio_ns.class_(
     "I2SAudioSpeaker", cg.Component, speaker.Speaker, I2SAudioOut
 )
 
-i2s_dac_mode_t = cg.global_ns.enum("i2s_dac_mode_t")
-
-
-
-CONFIG_SCHEMA = cv.All(
-    cv.GenerateID(): cv.declare_id(I2SAudioSpeaker),
-    cv.GenerateID(CONF_I2S_AUDIO_ID): cv.use_id(I2SAudioComponent),
-    cv.Optional(CONF_BUFFER_SIZE, default=1024): cv.int_range(min=256, max=2048),
-    cv.Optional(CONF_DMA_BUF_COUNT, default=8): cv.int_range(min=2, max=16) 
+CONFIG_SCHEMA = cv.Schema(
+    {
+        cv.GenerateID(): cv.declare_id(I2SAudioSpeaker),
+        cv.GenerateID(CONF_I2S_AUDIO_ID): cv.use_id(I2SAudioComponent),
+        cv.Optional(CONF_BUFFER_SIZE, default=1024): cv.int_range(min=256, max=2048),
+        cv.Optional(CONF_DMA_BUF_COUNT, default=8): cv.int_range(min=2, max=16) 
+    }
 )
 
 
