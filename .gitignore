@@ -5,3 +5,4 @@
 
 # Ignore .esphome directory in any subfolder
 **/.esphome/
+components/m5atoms3_audio/speaker/__init__.py

@@ -13,6 +13,7 @@ from .. import (
 
 CONF_BUFFER_SIZE = "buffer_size"
 CONF_DMA_BUF_COUNT = "buffer_count"
+CONF_NUM_CHANNELS = "num_channels"
 
 CODEOWNERS = ["@jesserockz"]
 # DEPENDENCIES = ["i2s_audio"]
@@ -27,7 +28,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.GenerateID(): cv.declare_id(I2SAudioSpeaker),
         cv.GenerateID(CONF_I2S_AUDIO_ID): cv.use_id(I2SAudioComponent),
         cv.Optional(CONF_BUFFER_SIZE, default=1024): cv.int_range(min=256, max=2048),
-        cv.Optional(CONF_DMA_BUF_COUNT, default=8): cv.int_range(min=2, max=16) 
+        cv.Optional(CONF_DMA_BUF_COUNT, default=8): cv.int_range(min=2, max=16),
+        cv.Optional(CONF_NUM_CHANNELS, default="2"): cv.string,
     }
 )
 
@@ -43,3 +45,5 @@ async def to_code(config):
         cg.add(var.set_buffer_size(config[CONF_BUFFER_SIZE]))
     if config[CONF_DMA_BUF_COUNT]:
         cg.add(var.set_buffer_size(config[CONF_DMA_BUF_COUNT]))
+    if config[CONF_NUM_CHANNELS]:
+        cg.add(var.set_num_channels(int(config[CONF_NUM_CHANNELS])))
