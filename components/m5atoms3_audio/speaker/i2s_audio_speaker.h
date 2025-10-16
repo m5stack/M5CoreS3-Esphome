@@ -47,7 +47,7 @@ class I2SAudioSpeaker : public Component, public speaker::Speaker, public I2SAud
   void loop() override;
 
   void set_dma_buf_count(uint8_t count) { this->dma_buf_count_ = count; }
-  void set_buffer_size(size_t rate) { this->buffer_size = rate; }
+  void set_buffer_size(size_t rate) { this->buffer_size_ = rate; }
   void start() override;
   void stop() override;
 

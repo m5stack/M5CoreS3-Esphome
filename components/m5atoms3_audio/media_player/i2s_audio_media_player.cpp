@@ -154,7 +154,7 @@ void I2SAudioMediaPlayer::start_() {
     }
 
   this->i2s_state_ = I2S_STATE_RUNNING;
-  this->high_freq_.start();
+  
   this->audio_->setVolume(remap<uint8_t, float>(this->volume, 0.0f, 1.0f, 0, 21));
   if (this->current_url_.has_value()) {
      ESP_LOGCONFIG(TAG, "  CurrentUrl:" this->current_url_ );
@@ -184,7 +184,7 @@ void I2SAudioMediaPlayer::stop_() {
   this->parent_->unlock();
   this->i2s_state_ = I2S_STATE_STOPPED;
 
-  this->high_freq_.stop();
+  
   this->state = media_player::MEDIA_PLAYER_STATE_IDLE;
   this->publish_state();
 }

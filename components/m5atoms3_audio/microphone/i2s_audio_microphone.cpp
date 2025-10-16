@@ -87,7 +87,7 @@ void I2SAudioMicrophone::start_() {
 
 
   this->state_ = microphone::STATE_RUNNING;
-  this->high_freq_.start();
+
 }
 
 void I2SAudioMicrophone::stop() {
