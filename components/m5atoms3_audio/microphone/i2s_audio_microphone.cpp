@@ -2,7 +2,6 @@
 
 // #ifdef USE_ESP32
 
-// #include <driver/i2s.h>
 #include <M5Unified.h>
 
 #include "esphome/core/hal.h"
@@ -144,15 +143,7 @@ void I2SAudioMicrophone::read_() {
   std::vector<uint8_t> byte_samples(reinterpret_cast<uint8_t*>(samples.data()), reinterpret_cast<uint8_t*>(samples.data()) + samples.size() * sizeof(int16_t));
   this->data_callbacks_.call(byte_samples);
 
-  // std::vector<int16_t> samples;
-  // samples.resize(BUFFER_SIZE);
 
-  // ESP_LOGI(TAG, "start record %d", BUFFER_SIZE);
-  // M5.Mic.record(samples.data(), BUFFER_SIZE, 16000);
-  // while (M5.Mic.isRecording());
-  // ESP_LOGI(TAG, "done");
-
-  // this->data_callbacks_.call(samples);
 }
 
 void I2SAudioMicrophone::loop() {

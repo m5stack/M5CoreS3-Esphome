@@ -11,17 +11,6 @@ namespace m5atoms3_audio {
 static const char *const TAG = "m5atoms3.audio";
 
 void M5AtomS3AudioComponent::setup() {
-  // static i2s_port_t next_port_num = I2S_NUM_0;
-
-  // if (next_port_num >= I2S_NUM_MAX) {
-  //   ESP_LOGE(TAG, "Too many I2S Audio components!");
-  //   this->mark_failed();
-  //   return;
-  // }
-
-  // this->port_ = next_port_num;
-  // next_port_num = (i2s_port_t) (next_port_num + 1);
-
   ESP_LOGI(TAG, "setup");
 }
 

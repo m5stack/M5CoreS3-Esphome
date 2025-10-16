@@ -6,7 +6,6 @@
 #include "../m5atoms3_audio.h"
 
 
-#include <driver/i2s_std.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 
@@ -37,7 +36,7 @@ struct TaskEvent {
 struct DataEvent {
   bool stop;
   size_t len;
-  uint8_t data[BUFFER_SIZE];
+  std::vector<uint8_t> data; // dynamic size
 };
 
 class I2SAudioSpeaker : public Component, public speaker::Speaker, public I2SAudioOut {
@@ -47,12 +46,8 @@ class I2SAudioSpeaker : public Component, public speaker::Speaker, public I2SAud
   void setup() override;
   void loop() override;
 
-  void set_dout_pin(uint8_t pin) { this->dout_pin_ = pin; }
-#if SOC_I2S_SUPPORTS_DAC
-  void set_internal_dac_mode(i2s_dac_mode_t mode) { this->internal_dac_mode_ = mode; }
-#endif
-  void set_external_dac_channels(uint8_t channels) { this->external_dac_channels_ = channels; }
-
+  void set_dma_buf_count(uint8_t count) { this->dma_buf_count_ = count; }
+  void set_buffer_size(size_t rate) { this->buffer_size = rate; }
   void start() override;
   void stop() override;
 
@@ -65,18 +60,15 @@ class I2SAudioSpeaker : public Component, public speaker::Speaker, public I2SAud
   // void stop_();
   void watch_();
 
+  uint8_t dma_buf_count_ = 8;
+  size_t buffer_size_ = 1024;
   static void player_task(void *params);
 
   TaskHandle_t player_task_handle_{nullptr};
   QueueHandle_t buffer_queue_;
   QueueHandle_t event_queue_;
 
-  uint8_t dout_pin_{0};
-
-#if SOC_I2S_SUPPORTS_DAC
-  i2s_dac_mode_t internal_dac_mode_{I2S_DAC_CHANNEL_DISABLE};
-#endif
-  uint8_t external_dac_channels_;
+  
 };
 
 }  // namespace i2s_audio

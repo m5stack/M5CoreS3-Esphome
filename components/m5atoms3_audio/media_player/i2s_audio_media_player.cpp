@@ -140,11 +140,6 @@ void I2SAudioMediaPlayer::start_() {
     return;  // Waiting for another i2s to return lock
   }
 
-#if SOC_I2S_SUPPORTS_DAC
-  if (this->internal_dac_mode_ != I2S_DAC_CHANNEL_DISABLE) {
-    this->audio_ = make_unique<Audio>(true, this->internal_dac_mode_, this->parent_->get_port());
-  } else {
-#endif
     this->audio_ = make_unique<Audio>(false, 3, this->parent_->get_port());
 
     i2s_pin_config_t pin_config = this->parent_->get_pin_config();
@@ -157,9 +152,6 @@ void I2SAudioMediaPlayer::start_() {
       this->mute_pin_->setup();
       this->mute_pin_->digital_write(false);
     }
-#if SOC_I2S_SUPPORTS_DAC
-  }
-#endif
 
   this->i2s_state_ = I2S_STATE_RUNNING;
   this->high_freq_.start();
@@ -209,29 +201,10 @@ void I2SAudioMediaPlayer::dump_config() {
     ESP_LOGCONFIG(TAG, "Audio failed to initialize!");
     return;
   }
-#if SOC_I2S_SUPPORTS_DAC
-  if (this->internal_dac_mode_ != I2S_DAC_CHANNEL_DISABLE) {
-    switch (this->internal_dac_mode_) {
-      case I2S_DAC_CHANNEL_LEFT_EN:
-        ESP_LOGCONFIG(TAG, "  Internal DAC mode: Left");
-        break;
-      case I2S_DAC_CHANNEL_RIGHT_EN:
-        ESP_LOGCONFIG(TAG, "  Internal DAC mode: Right");
-        break;
-      case I2S_DAC_CHANNEL_BOTH_EN:
-        ESP_LOGCONFIG(TAG, "  Internal DAC mode: Left & Right");
-        break;
-      default:
-        break;
-    }
-  } else {
-#endif
+
     ESP_LOGCONFIG(TAG, "  External DAC channels: %d", this->external_dac_channels_);
     ESP_LOGCONFIG(TAG, "  I2S DOUT Pin: %d", this->dout_pin_);
     LOG_PIN("  Mute Pin: ", this->mute_pin_);
-#if SOC_I2S_SUPPORTS_DAC
-  }
-#endif
 }
 
 }  // namespace i2s_audio
