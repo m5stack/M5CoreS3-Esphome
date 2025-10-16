@@ -45,7 +45,4 @@ async def to_code(config):
         cg.add(var.set_buffer_size(config[CONF_BUFFER_SIZE]))
     if config[CONF_DMA_BUF_COUNT]:
         cg.add(var.set_buffer_size(config[CONF_DMA_BUF_COUNT]))
-    if config[CONF_NUM_CHANNELS]:
-        cg.add(var.set_num_channels(int(config[CONF_NUM_CHANNELS])))
-    if config[CONF_SAMPLE_RATE]:
-        cg.add(var.set_sample_rate(int(config[CONF_SAMPLE_RATE])))
+   
