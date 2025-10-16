@@ -36,7 +36,7 @@ BITS_PER_SAMPLE = {
 _validate_bits = cv.float_with_unit("bits", "bit")
 
 
-BASE_SCHEMA = microphone.MICROPHONE_SCHEMA.extend(
+CONFIG_SCHEMA = microphone.MICROPHONE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(I2SAudioMicrophone),
         cv.GenerateID(CONF_I2S_AUDIO_ID): cv.use_id(I2SAudioComponent),
