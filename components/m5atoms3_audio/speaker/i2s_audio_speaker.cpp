@@ -72,7 +72,7 @@ void I2SAudioSpeaker::player_task(void *params) {
       break;
     }
 
-    memmove(buffer, data_event.data, data_event.len);
+    memmove(buffer, data_event.data.data(), data_event.len);
     // clear the vector for reuse
     data_event.data.clear();
     // Play the buffer directly
