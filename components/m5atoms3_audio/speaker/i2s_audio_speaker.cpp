@@ -72,16 +72,19 @@ void I2SAudioSpeaker::player_task(void *params) {
       break;
     }
 
-    // Assuming data_event.data contains interleaved stereo int16_t samples
-    size_t num_samples = data_event.len / sizeof(int16_t) / 2; // 2 channels
-    int16_t mono_buffer[num_samples];
-    const int16_t* stereo = reinterpret_cast<const int16_t*>(data_event.data.data());
-    for (size_t i = 0; i < num_samples; ++i) {
-        int32_t left = stereo[2*i];
-        int32_t right = stereo[2*i+1];
-        mono_buffer[i] = (left + right) / 2;
+    // Logging: buffer info
+    ESP_LOGI(TAG, "Received data_event.len=%u bytes", (unsigned)data_event.len);
+    size_t num_samples = data_event.len / sizeof(int16_t); // mono
+    ESP_LOGI(TAG, "num_samples (mono)=%u", (unsigned)num_samples);
+
+    const int16_t* mono = reinterpret_cast<const int16_t*>(data_event.data.data());
+    ESP_LOGI(TAG, "First 8 mono samples:");
+    for (size_t i = 0; i < 8 && i < num_samples; ++i) {
+        ESP_LOGI(TAG, "  [%u] %d", (unsigned)i, mono[i]);
     }
-    M5.Speaker.playRaw(mono_buffer, num_samples, 16000);
+
+    ESP_LOGI(TAG, "Calling playRaw: num_samples=%u, sample_rate=%d", (unsigned)num_samples, 16000);
+    M5.Speaker.playRaw(mono, num_samples, 16000);
 
     event.type = TaskEventType::PLAYING;
     xQueueSend(this_speaker->event_queue_, &event, portMAX_DELAY);
