@@ -72,11 +72,16 @@ void I2SAudioSpeaker::player_task(void *params) {
       break;
     }
 
-    memmove(buffer, data_event.data.data(), data_event.len);
-    // clear the vector for reuse
-    data_event.data.clear();
-    // Play the buffer directly
-    M5.Speaker.playRaw(buffer, data_event.len / sizeof(int16_t), this_speaker->sample_rate_);
+    // Assuming data_event.data contains interleaved stereo int16_t samples
+    size_t num_samples = data_event.len / sizeof(int16_t) / 2; // 2 channels
+    int16_t mono_buffer[num_samples];
+    const int16_t* stereo = reinterpret_cast<const int16_t*>(data_event.data.data());
+    for (size_t i = 0; i < num_samples; ++i) {
+        int32_t left = stereo[2*i];
+        int32_t right = stereo[2*i+1];
+        mono_buffer[i] = (left + right) / 2;
+    }
+    M5.Speaker.playRaw(mono_buffer, num_samples, 16000);
 
     event.type = TaskEventType::PLAYING;
     xQueueSend(this_speaker->event_queue_, &event, portMAX_DELAY);
