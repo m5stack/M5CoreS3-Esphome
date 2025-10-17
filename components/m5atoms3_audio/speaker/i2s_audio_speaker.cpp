@@ -161,7 +161,7 @@ size_t I2SAudioSpeaker::play(const uint8_t *data, size_t length) {
       ESP_LOGI(TAG, "  [%u] %d", (unsigned)i, mono[i]);
   }
 
-  M5.Speaker.playRaw(mono, num_samples, this->sample_rate_));
+  M5.Speaker.playRaw(mono, num_samples, this->sample_rate_);
   return length;
 }
 
