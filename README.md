@@ -1,4 +1,6 @@
-# M5CoreS3-ESPhome
+# 🚫 Deprecated - Please use the new repo [esphome-yaml](https://github.com/m5stack/esphome-yaml) instead. 
+
+## M5CoreS3-ESPhome
 
 * Create a new device in ESPhome
 * Edit the device
