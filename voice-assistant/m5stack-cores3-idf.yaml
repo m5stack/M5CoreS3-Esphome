@@ -59,10 +59,6 @@ esphome:
             then:
               - lambda: id(init_in_progress) = false;
               - script.execute: draw_display
-    - priority: -100
-      then:
-        # CoreS3: power the AW88298 amp so media_player/TTS is audible.
-        - lambda: id(aw88298_amp).power_on();
 
 esp32:
   variant: esp32s3
@@ -239,6 +235,8 @@ media_player:
       - id: timer_finished_sound
         file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/timer_finished.flac
     on_announcement:
+      # Battery saving: power the AW88298 amp only while sound is playing.
+      - lambda: id(aw88298_amp).power_on();
       # Stop the wake word (mWW or VA) if the mic is capturing
       - if:
           condition:
@@ -271,6 +269,18 @@ media_player:
             - script.execute: start_wake_word
             - script.execute: set_idle_or_mute_phase
             - script.execute: draw_display
+      # Playback finished -> drop the amp rail (short settle so the power-down
+      # transient lands after the buffer drains). Amp power tracks PLAYBACK, not
+      # power source — it's powered on for any speech/media/alarm and dropped when
+      # idle, on battery or USB alike. The ONLY guard is the ring: never cut power
+      # mid-ring (a ringing timer repeats with 1 s gaps and the player blips idle
+      # between repeats).
+      - delay: 300ms
+      - if:
+          condition:
+            switch.is_off: timer_ringing
+          then:
+            - lambda: id(aw88298_amp).power_off();
 
 micro_wake_word:
   id: mww
@@ -383,7 +393,50 @@ voice_assistant:
     - script.execute: draw_display
 
 script:
+  # Wrapper: the slide-to-reset screen overrides everything; otherwise render the
+  # normal voice-assistant display. All callers use draw_display.
   - id: draw_display
+    then:
+      - if:
+          condition:
+            lambda: "return id(reset_mode);"
+          then:
+            - lambda: |-
+                id(s3_box_lcd).show_page(reset_page);
+                id(s3_box_lcd).update();
+          else:
+            - script.execute: draw_va_display
+  - id: enter_reset_mode
+    then:
+      - script.execute: stop_wake_word
+      - lambda: |-
+          id(reset_mode) = true;
+          id(reset_slide_x) = 24;
+          id(slide_armed) = false;
+          id(reset_entered_ms) = millis();
+      - script.execute: draw_display
+      - script.execute: reset_timeout
+  - id: exit_reset_mode
+    then:
+      - lambda: |-
+          id(reset_mode) = false;
+          id(reset_slide_x) = 24;
+          id(tap_count) = 0;
+          id(slide_armed) = false;
+      - script.execute: start_wake_word
+      - script.execute: draw_display
+  - id: reset_timeout
+    # Restarted on entry and on every slide update -> dismisses after 10 s of
+    # no interaction.
+    mode: restart
+    then:
+      - delay: 10s
+      - if:
+          condition:
+            lambda: "return id(reset_mode);"
+          then:
+            - script.execute: exit_reset_mode
+  - id: draw_va_display
     then:
       - if:
           condition:
@@ -530,6 +583,37 @@ script:
             }
             id(s3_box_lcd).printf(120, 47, id(font_timer), Color::BLACK, "%s", display_string.c_str());
           }
+  # Battery glyph ported from token-monitor: light-grey outline + terminal,
+  # green/amber/red fill, white % label, and an amber lightning bolt (left of the
+  # cell) when charging. Bottom-right, just above the timer-timeline strip (y225).
+  - id: draw_battery_widget
+    then:
+      - lambda: |
+          float lvl = id(bat_level).state;
+          if (lvl == lvl) {                       // NaN check
+            if (lvl < 0.0f) lvl = 0.0f;
+            if (lvl > 100.0f) lvl = 100.0f;
+            int bw = 40, bh = 17;
+            int bx = id(s3_box_lcd).get_width() - bw - 8;
+            int byb = id(s3_box_lcd).get_height() - bh - 22;   // clear of the y225 timeline
+            Color fr = Color(200, 206, 210);
+            id(s3_box_lcd).rectangle(bx, byb, bw, bh, fr);
+            id(s3_box_lcd).filled_rectangle(bx + bw, byb + 5, 3, 7, fr);   // terminal nub
+            Color fc = lvl > 50.0f ? Color(35, 134, 54) : lvl > 20.0f ? Color(210, 153, 34) : Color(218, 54, 51);
+            int fw = (int)((lvl / 100.0f) * (bw - 2));
+            if (fw > 0) id(s3_box_lcd).filled_rectangle(bx + 1, byb + 1, fw, bh - 2, fc);
+            char b[8]; snprintf(b, sizeof(b), "%.0f%%", lvl);
+            id(s3_box_lcd).printf(bx + bw / 2, byb + bh / 2, id(font_battery), Color(255, 255, 255), TextAlign::CENTER, "%s", b);
+            if (id(bat_charging).state) {          // amber lightning bolt, left of the cell
+              Color bolt = Color(245, 194, 93);
+              int m = byb + bh / 2;
+              for (int ox = 0; ox <= 1; ox++) {
+                id(s3_box_lcd).line(bx - 7 + ox,  byb,      bx - 13 + ox, m,        bolt);
+                id(s3_box_lcd).line(bx - 13 + ox, m,        bx - 8 + ox,  m,        bolt);
+                id(s3_box_lcd).line(bx - 8 + ox,  m,        bx - 14 + ox, byb + bh, bolt);
+              }
+            }
+          }
   # Starts either mWW or the streaming wake word, depending on the configured location
   - id: start_wake_word
     then:
@@ -618,6 +702,10 @@ switch:
       - media_player.stop:
           announcement: true
     on_turn_on:
+      # Power the amp for the alarm. The on-device speaker play below doesn't go
+      # through on_announcement, so power it on explicitly (idempotent). on_idle
+      # drops it again once the ring is dismissed.
+      - lambda: id(aw88298_amp).power_on();
       # Turn on the repeat mode and pause for 1000 ms between playlist items/repeats
       - lambda: |-
             id(speaker_media_player)
@@ -676,11 +764,129 @@ select:
                       then:
                         - micro_wake_word.start
 
+sensor:
+  # Battery state from the AXP2101 PMU — drawn on the idle screen + exposed to HA.
+  - platform: axp2101
+    id: axp_pmu_sensor
+    update_interval: 30s
+    battery_level:
+      name: Battery Level
+      id: bat_level
+      filters:
+        - or:
+            - delta: 1
+            - heartbeat: 120s
+      on_value:
+        - script.execute: draw_display
+    battery_voltage:
+      name: Battery Voltage
+      id: bat_voltage
+      internal: true   # used to detect whether a cell is fitted (presence)
+    battery_charging:
+      name: Battery Charging
+      id: bat_charging
+      on_state:
+        - script.execute: draw_display   # redraw the charging bolt
+  # BMI270 in-plane axis for gravity-based screen rotation (internal; off HA).
+  - platform: motion
+    type: acceleration_y
+    id: accel_y
+    internal: true
+
+binary_sensor:
+  # Runtime power state: a cell is fitted (voltage > 2.5 V) AND not charging. This
+  # is the runtime equivalent of "#ifdef battery" — one binary adapts to CoreS3
+  # (battery) vs Lite/SE (no cell) vs on-USB, since presence is a runtime fact.
+  - platform: template
+    name: On Battery Power
+    id: on_battery_power
+    lambda: "return !isnan(id(bat_voltage).state) && id(bat_voltage).state > 2.5f && !id(bat_charging).state;"
+    on_state:
+      # On battery 40%, on USB / no-battery 70% (full backlight washes the LCD
+      # blacks to grey). Only on a power-state change, so the GUI "Screen" light
+      # stays adjustable in between.
+      - light.turn_on:
+          id: led
+          brightness: !lambda "return x ? 0.4f : 0.7f;"
+
+# BMI270 IMU for gravity-based screen rotation. Casita art is landscape, so only
+# 0/180 is used (90/270 portrait would clip the illustrations). CoreS3: 0x69.
+motion:
+  - platform: bmi270
+    i2c_id: i2c_adc_dac
+    address: 0x69
+    update_interval: 250ms
+
+interval:
+  - interval: 1s
+    then:
+      - lambda: |
+          float ay = id(accel_y).state;   // TUNE: flip the comparisons if it rotates the wrong way
+          if (!isnan(ay)) {
+            if (ay > 0.30f) id(orientation) = 0;
+            else if (ay < -0.30f) id(orientation) = 180;
+          }
+      - if:
+          condition:
+            lambda: "return id(orientation) != id(orientation_applied);"
+          then:
+            - lambda: |-
+                id(orientation_applied) = id(orientation);
+                id(s3_box_lcd).set_rotation(id(orientation) == 180 ? display::DISPLAY_ROTATION_180_DEGREES
+                                                                   : display::DISPLAY_ROTATION_0_DEGREES);
+            - script.execute: draw_display
+
 globals:
   - id: init_in_progress
     type: bool
     restore_value: false
     initial_value: "true"
+  - id: orientation
+    type: int
+    restore_value: false
+    initial_value: "0"
+  - id: orientation_applied
+    type: int
+    restore_value: false
+    initial_value: "-1"
+  - id: touch_active
+    type: bool
+    restore_value: false
+    initial_value: "false"
+  - id: touch_ptt_started
+    type: bool
+    restore_value: false
+    initial_value: "false"
+  # Idle 5-tap -> slide-to-reset gesture (a resting object is one continuous
+  # touch, never 5 taps, so it can't trigger this).
+  - id: tap_count
+    type: int
+    restore_value: false
+    initial_value: "0"
+  - id: last_tap_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: "0"
+  - id: reset_mode
+    type: bool
+    restore_value: false
+    initial_value: "false"
+  - id: reset_slide_x
+    type: int
+    restore_value: false
+    initial_value: "24"
+  # True only while a drag that began on the handle is in progress, so a tap
+  # elsewhere on the reset screen (the X, the triangle) can't complete it.
+  - id: slide_armed
+    type: bool
+    restore_value: false
+    initial_value: "false"
+  # When the reset page opened — surplus taps within ~0.7 s of this are ignored
+  # so over-tapping to reach 5 doesn't immediately dismiss the page.
+  - id: reset_entered_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: "0"
   - id: voice_assistant_phase
     type: int
     restore_value: false
@@ -771,6 +977,14 @@ font:
     size: 30
     glyphsets:
       - ${font_glyphsets}
+  - file:
+      type: gfonts
+      family: ${font_family}
+      weight: 400
+    id: font_battery
+    size: 12
+    glyphsets:
+      - ${font_glyphsets}
 
 text_sensor:
   - id: text_request
@@ -816,6 +1030,130 @@ spi:
     clk_pin: GPIO36
     mosi_pin: GPIO37
 
+# Touch (FT6336) replaces the S3-BOX-3's GPIO0 button (the CoreS3 lacks it — that
+# pin is the I2S MCLK here). Whole-screen, so it works in either rotation:
+#   * tap         -> stop: cancel an agent conversation and/or silence a ringing timer
+#   * ~1 s hold   -> push-to-talk: start listening (stands in for the wake word)
+#   * 5 idle taps -> slide-to-reset screen (a resting object is one continuous
+#                    touch, never 5 taps, so it can't reach this)
+# On the reset screen, dragging the handle to the far end factory-resets; a tap,
+# an aborted slide, or 10 s idle dismisses it. FT6336 reset is on AW9523 P0_0.
+#
+# HARDWARE LIMIT: touch is POLLED. The FT6336 INT is on the AW9523 expander
+# (P1_2), not an ESP32 GPIO, so it can't drive an ESPHome touchscreen interrupt
+# (and ESPHome runs every component loop on one core — touch + display together —
+# so it can't be offloaded to the 2nd core without a custom tasked driver). Brief
+# taps that land during a loop stall (wake-word inference / a redraw) can be
+# dropped, so the 5-tap reset may take a few extra deliberate taps. This is
+# accepted, not a bug. See CoreS3-Lite-hardware.md.
+touchscreen:
+  - platform: ft63x6
+    id: cs3_touch
+    i2c_id: i2c_adc_dac
+    reset_pin:
+      aw9523b_id: aw9523b_hub
+      number: 0
+    calibration: {x_min: 0, x_max: 320, y_min: 0, y_max: 240}
+    on_touch:
+      - if:
+          # On the reset screen the touch drives the slider (see on_update); skip
+          # the push-to-talk arming.
+          condition:
+            lambda: "return !id(reset_mode);"
+          then:
+            # Start listening AFTER 1 s of holding — fires WHILE still held, not
+            # on release. on_release clears touch_active, cancelling this if the
+            # touch ended before 1 s.
+            - lambda: |-
+                id(touch_active) = true;
+                id(touch_ptt_started) = false;
+            - delay: 1s
+            - if:
+                condition:
+                  lambda: "return id(touch_active) && !id(reset_mode);"
+                then:
+                  - lambda: "id(touch_ptt_started) = true;"
+                  - script.execute: stop_wake_word
+                  - voice_assistant.start:
+          else:
+            # Reset screen: only arm the slide if the press starts on the handle
+            # (left of the track). A tap on the X / triangle leaves it disarmed so
+            # on_release just cancels.
+            - lambda: |-
+                int sx = touch.x, sy = touch.y;
+                if (id(orientation) == 180) { sx = 320 - sx; sy = 240 - sy; }
+                id(slide_armed) = (sx <= 110 && sy >= 120 && sy <= 220);
+    on_update:
+      # Only when a handle-drag is in progress: the handle follows the finger.
+      - if:
+          condition:
+            lambda: "return id(reset_mode) && id(slide_armed);"
+          then:
+            - lambda: |-
+                if (!touches.empty()) {
+                  int fx = touches[0].x;
+                  // Touch coords are physical; the display is rotated 180 in the
+                  // upside-down orientation, so mirror X to match what's drawn.
+                  if (id(orientation) == 180) fx = 320 - fx;
+                  id(reset_slide_x) = fx;
+                }
+            - script.execute: reset_timeout
+            - if:
+                condition:
+                  lambda: "return id(reset_slide_x) >= 280;"
+                then:
+                  - lambda: "id(reset_mode) = false;"
+                  - button.press: factory_reset_btn
+                else:
+                  - script.execute: draw_display
+    on_release:
+      - lambda: "id(touch_active) = false;"
+      - if:
+          condition:
+            lambda: "return id(reset_mode);"
+          then:
+            # Surplus entry-taps (within the grace window) are absorbed so
+            # over-tapping to reach 5 doesn't dismiss the page. After that, a
+            # lift-off without reaching the end cancels (fail safe).
+            - if:
+                condition:
+                  lambda: "return (millis() - id(reset_entered_ms)) > 700;"
+                then:
+                  - script.execute: exit_reset_mode
+          else:
+            - if:
+                condition:
+                  # Skip if the hold already started listening; else it was a tap.
+                  lambda: "return !id(touch_ptt_started);"
+                then:
+                  # Tap stops whatever's active; if nothing is active (idle) it
+                  # counts toward the 5-tap reset gesture.
+                  - if:
+                      condition:
+                        voice_assistant.is_running:
+                      then:
+                        - voice_assistant.stop:
+                        - lambda: "id(tap_count) = 0;"
+                      else:
+                        - if:
+                            condition:
+                              switch.is_on: timer_ringing
+                            then:
+                              - switch.turn_off: timer_ringing
+                              - lambda: "id(tap_count) = 0;"
+                            else:
+                              - lambda: |-
+                                  uint32_t now = millis();
+                                  if (now - id(last_tap_ms) > 2000) id(tap_count) = 0;
+                                  id(tap_count) += 1;
+                                  id(last_tap_ms) = now;
+                              - if:
+                                  condition:
+                                    lambda: "return id(tap_count) >= 5;"
+                                  then:
+                                    - lambda: "id(tap_count) = 0;"
+                                    - script.execute: enter_reset_mode
+
 display:
   - platform: mipi_spi
     id: s3_box_lcd
@@ -837,6 +1175,7 @@ display:
           it.image((it.get_width() / 2), (it.get_height() / 2), id(casita_idle), ImageAlign::CENTER);
           id(draw_timer_timeline).execute();
           id(draw_active_timer_widget).execute();
+          id(draw_battery_widget).execute();
       - id: listening_page
         lambda: |-
           it.fill(id(listening_color));
@@ -884,3 +1223,27 @@ display:
           it.fill(Color::BLACK);
           id(draw_timer_timeline).execute();
           id(draw_active_timer_widget).execute();
+      - id: reset_page
+        # Language-agnostic factory-reset confirm: warning triangle + a slide
+        # track whose ">>" handle follows the finger. Drag it past the far end to
+        # reset; the X corner / a tap / 10 s idle cancels. No text -> no fonts to
+        # localise.
+        lambda: |-
+          it.fill(Color::BLACK);
+          // Warning triangle with "!"
+          it.line(160, 16, 124, 72, id(error_color));
+          it.line(124, 72, 196, 72, id(error_color));
+          it.line(196, 72, 160, 16, id(error_color));
+          it.printf(160, 30, id(font_timer), id(error_color), TextAlign::TOP_CENTER, "!");
+          // Cancel hint: an X in the top-right corner
+          it.line(296, 8, 312, 24, Color::WHITE);
+          it.line(312, 8, 296, 24, Color::WHITE);
+          // Instruction (English, same font as the no-HA/no-WiFi screen text)
+          it.printf(160, 92, id(font_request), Color::WHITE, TextAlign::TOP_CENTER, "Swipe to reset");
+          // Slide track + progress fill + handle
+          it.rectangle(24, 150, 272, 56, Color::WHITE);
+          int fx = id(reset_slide_x);
+          if (fx < 24) fx = 24;
+          if (fx > 296) fx = 296;
+          if (fx > 25) it.filled_rectangle(24, 150, fx - 24, 56, id(error_color));
+          it.printf(fx, 178, id(font_timer), Color::WHITE, TextAlign::CENTER, ">>");
