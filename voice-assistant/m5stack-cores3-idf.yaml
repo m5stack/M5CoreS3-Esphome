@@ -383,6 +383,19 @@ voice_assistant:
     - script.execute: draw_display
 
 script:
+  - id: draw_net_status
+    # SSID + IP footer for the no-HA / no-WiFi screens.
+    then:
+      - lambda: |-
+          int w = id(s3_box_lcd).get_width();
+          int h = id(s3_box_lcd).get_height();
+          std::string ss = id(wifi_ssid_name).state;
+          std::string ip = id(wifi_ip_addr).state;
+          id(s3_box_lcd).filled_rectangle(0, h - 34, w, 34, Color::BLACK);
+          id(s3_box_lcd).printf(w / 2, h - 32, id(font_request), Color(200, 200, 200),
+                                TextAlign::TOP_CENTER, "%s", ss.empty() ? "(no wifi)" : ss.c_str());
+          id(s3_box_lcd).printf(w / 2, h - 17, id(font_request), Color(200, 200, 200),
+                                TextAlign::TOP_CENTER, "%s", ip.empty() ? "(no IP)" : ip.c_str());
   - id: draw_display
     then:
       - if:
@@ -793,6 +806,16 @@ text_sensor:
           id(text_response).state = (truncated+"...").c_str();
         }
 
+  # Shown on the no-HA / no-WiFi screens so a stuck device reveals where it is:
+  # got an IP but no HA = API issue; no IP = WiFi issue.
+  - platform: wifi_info
+    ip_address:
+      id: wifi_ip_addr
+      internal: true
+    ssid:
+      id: wifi_ssid_name
+      internal: true
+
 color:
   - id: idle_color
     hex: ${idle_illustration_background_color}
@@ -872,9 +895,11 @@ display:
       - id: no_ha_page
         lambda: |-
           it.image((it.get_width() / 2), (it.get_height() / 2), id(error_no_ha), ImageAlign::CENTER);
+          id(draw_net_status).execute();
       - id: no_wifi_page
         lambda: |-
           it.image((it.get_width() / 2), (it.get_height() / 2), id(error_no_wifi), ImageAlign::CENTER);
+          id(draw_net_status).execute();
       - id: initializing_page
         lambda: |-
           it.fill(id(loading_color));
